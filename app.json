@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "S_A-H ULTIMATE",
+    "slug": "sah-ultimate",
+    "version": "3.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.sah.ultimatedashboard",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ddd483ac-a557-454b-b2f0-1f32167516ab"
+      },
+      "GROQ_API_KEY": {},
+      "SAMBANOVA_API_KEY": {},
+      "GEMINI_API_KEY": {},
+      "GITHUB_TOKEN": {},
+      "SESSION_SECRET": {},
+      "buildTool": "capacitor"
+    }
+  }
+}

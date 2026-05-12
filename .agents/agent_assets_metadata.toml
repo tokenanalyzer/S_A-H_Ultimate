@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "XqvpVA5xw3p7Gxg0ofiYk"
+uri = "file://SAH_ULTIMATE_V2_PRO.zip"
+type = "unspecified"
+title = "SAH_ULTIMATE_V2_PRO.zip — Full Source Backup"
+
+[[outputs]]
+id = "0CivclYxWLoxDOQ9Gq-j0"
+uri = "file://SAH_ULTIMATE_V3_FINAL_PRO.zip"
+type = "unspecified"
+title = "SAH_ULTIMATE_V3_FINAL_PRO.zip — Final Build (142 KB, 130 files)"
+
+[[outputs]]
+id = "Yx2FmkmSWx3ylaX7f5Faq"
+uri = "file://SAH_User_Manual.pdf"
+type = "pdf"
+title = "SAH_User_Manual.pdf — Hinglish Edition (41 KB, 12 pages)"

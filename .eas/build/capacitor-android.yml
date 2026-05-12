@@ -1,0 +1,70 @@
+build:
+  name: S_A-H ULTIMATE — Capacitor Android Build
+  steps:
+    # ── 1. Checkout source code ──────────────────────────────────────────
+    - eas/checkout
+
+    # ── 2. Install Node.js tooling ───────────────────────────────────────
+    - run:
+        name: Install pnpm
+        command: npm install -g pnpm@latest
+
+    - run:
+        name: Install workspace dependencies
+        command: pnpm install --frozen-lockfile
+
+    # ── 3. Build the Vite web bundle ─────────────────────────────────────
+    - run:
+        name: Build web assets (Vite)
+        command: NODE_ENV=production BASE_PATH=/ pnpm --filter @workspace/audit-dashboard run build
+
+    # ── 4. Set up Java / Android SDK ─────────────────────────────────────
+    - eas/install_jdk:
+        jdk_version: "17"
+
+    - run:
+        name: Set ANDROID_HOME
+        command: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $EAS_BUILD_ENVIRONMENT_FILE
+          echo "PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools" >> $EAS_BUILD_ENVIRONMENT_FILE
+
+    # ── 5. Capacitor: add android platform if not present ────────────────
+    - run:
+        name: Capacitor — add android platform
+        working_directory: artifacts/audit-dashboard
+        command: |
+          if [ ! -d "android" ]; then
+            echo "android/ not found — running cap add android"
+            npx cap add android
+          else
+            echo "android/ already present, skipping cap add"
+          fi
+
+    # ── 6. Capacitor sync (copies web assets into android/ project) ───────
+    - run:
+        name: Capacitor — sync web assets
+        working_directory: artifacts/audit-dashboard
+        command: npx cap sync android
+
+    # ── 7. Accept Android SDK licences (required on fresh CI machines) ───
+    - run:
+        name: Accept Android SDK licences
+        command: yes | sdkmanager --licenses || true
+
+    # ── 8. Make gradlew executable ───────────────────────────────────────
+    - run:
+        name: Set gradlew permissions
+        working_directory: artifacts/audit-dashboard/android
+        command: chmod +x gradlew
+
+    # ── 9. Gradle build ──────────────────────────────────────────────────
+    - run:
+        name: Gradle build (${{ env.GRADLE_TASK }})
+        working_directory: artifacts/audit-dashboard/android
+        command: ./gradlew $GRADLE_TASK --no-daemon --stacktrace
+
+    # ── 10. Upload the built artifact ────────────────────────────────────
+    - eas/upload_artifact:
+        name: Upload APK / AAB
+        type: application-archive
+        path: ${{ env.ARTIFACT_PATH }}

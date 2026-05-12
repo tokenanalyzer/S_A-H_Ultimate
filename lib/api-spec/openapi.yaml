@@ -1,0 +1,491 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: S_A-H ULTIMATE — Web3 Audit Dashboard API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: analysis
+    description: Smart contract vulnerability analysis
+  - name: harvester
+    description: GitHub repo Solidity harvesting
+  - name: scout
+    description: Audit contest scouting
+  - name: bounty
+    description: Live bug bounty program scraper
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /analysis/scan:
+    post:
+      operationId: startAnalysis
+      tags: [analysis]
+      summary: Start a vulnerability scan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalysisInput"
+      responses:
+        "202":
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisJobRef"
+
+  /analysis/jobs:
+    get:
+      operationId: listAnalysisJobs
+      tags: [analysis]
+      summary: List all analysis jobs
+      responses:
+        "200":
+          description: List of analysis jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnalysisJob"
+
+  /analysis/jobs/{jobId}:
+    get:
+      operationId: getAnalysisJob
+      tags: [analysis]
+      summary: Get a specific analysis job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Analysis job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisJob"
+        "404":
+          description: Job not found
+
+  /harvester/harvest:
+    post:
+      operationId: harvestRepo
+      tags: [harvester]
+      summary: Harvest Solidity files from a GitHub repo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HarvestInput"
+      responses:
+        "200":
+          description: Harvest result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HarvestResult"
+
+  /harvester/jobs:
+    get:
+      operationId: listHarvestJobs
+      tags: [harvester]
+      summary: List all harvest jobs
+      responses:
+        "200":
+          description: List of harvest jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HarvestJob"
+
+  /scout/contests:
+    get:
+      operationId: listContests
+      tags: [scout]
+      summary: List audit contests from Sherlock and Code4rena
+      parameters:
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [all, sherlock, code4rena]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, active, upcoming, ended]
+      responses:
+        "200":
+          description: List of contests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contest"
+
+  /scout/stats:
+    get:
+      operationId: getScoutStats
+      tags: [scout]
+      summary: Get aggregated scout statistics
+      responses:
+        "200":
+          description: Scout stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoutStats"
+
+  /bounty/programs:
+    get:
+      operationId: getBountyPrograms
+      tags: [bounty]
+      summary: Get live bug bounty programs from Immunefi, HackenProof, Cantina
+      parameters:
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [all, immunefi, hackenproof, cantina]
+      responses:
+        "200":
+          description: Bounty programs result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BountyProgramsResult"
+
+  /bounty/summary:
+    get:
+      operationId: getBountySummary
+      tags: [bounty]
+      summary: Aggregated bounty program statistics
+      responses:
+        "200":
+          description: Bounty summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BountySummary"
+
+  /scout/rate-limit:
+    get:
+      operationId: getGithubRateLimit
+      tags: [scout]
+      summary: Check GitHub API rate limit
+      responses:
+        "200":
+          description: Rate limit info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GithubRateLimit"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    AnalysisInput:
+      type: object
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          type: string
+        branch:
+          type: ["string", "null"]
+
+    AnalysisJobRef:
+      type: object
+      required: [jobId, status]
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+
+    AnalysisFinding:
+      type: object
+      required: [id, title, severity, description, poc, pocSource]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low, informational]
+        description:
+          type: string
+        affectedCode:
+          type: ["string", "null"]
+        poc:
+          type: string
+        pocSource:
+          type: string
+          enum: [groq, sambanova, gemini, unavailable]
+
+    AnalysisLogEntry:
+      type: object
+      required: [time, level, message]
+      properties:
+        time:
+          type: string
+        level:
+          type: string
+          enum: [SYSTEM, INFO, DEBUG, WARN, ERROR]
+        message:
+          type: string
+
+    AnalysisJobStats:
+      type: object
+      required: [fileCount, contextSizeKb, findingCount]
+      properties:
+        fileCount:
+          type: integer
+        contextSizeKb:
+          type: number
+        findingCount:
+          type: integer
+
+    AnalysisJob:
+      type: object
+      required: [jobId, repoUrl, status, createdAt]
+      properties:
+        jobId:
+          type: string
+        repoUrl:
+          type: string
+        status:
+          type: string
+          enum: [pending, harvesting, scanning, generating_pocs, complete, failed]
+        createdAt:
+          type: string
+        completedAt:
+          type: ["string", "null"]
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalysisFinding"
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalysisLogEntry"
+        stats:
+          oneOf:
+            - $ref: "#/components/schemas/AnalysisJobStats"
+            - type: "null"
+        error:
+          type: ["string", "null"]
+
+    HarvestInput:
+      type: object
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          type: string
+        branch:
+          type: ["string", "null"]
+
+    HarvestResult:
+      type: object
+      required: [jobId, repoUrl, status, fileCount, totalLines, contextSizeKb, files]
+      properties:
+        jobId:
+          type: string
+        repoUrl:
+          type: string
+        status:
+          type: string
+          enum: [success, partial, failed]
+        fileCount:
+          type: integer
+        totalLines:
+          type: integer
+        contextSizeKb:
+          type: number
+        files:
+          type: array
+          items:
+            type: string
+        error:
+          type: ["string", "null"]
+
+    HarvestJob:
+      type: object
+      required: [jobId, repoUrl, status, createdAt, fileCount]
+      properties:
+        jobId:
+          type: string
+        repoUrl:
+          type: string
+        status:
+          type: string
+          enum: [success, partial, failed, pending]
+        createdAt:
+          type: string
+        fileCount:
+          type: integer
+        contextSizeKb:
+          type: ["number", "null"]
+
+    Contest:
+      type: object
+      required: [id, platform, title, status, repoUrl, startDate, endDate, tags]
+      properties:
+        id:
+          type: string
+        platform:
+          type: string
+          enum: [sherlock, code4rena]
+        title:
+          type: string
+        status:
+          type: string
+          enum: [active, upcoming, ended]
+        repoUrl:
+          type: string
+        prizePool:
+          type: ["integer", "null"]
+        startDate:
+          type: string
+        endDate:
+          type: string
+        nsloc:
+          type: ["integer", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+
+    ScoutStatsByPlatform:
+      type: object
+      required: [sherlock, code4rena]
+      properties:
+        sherlock:
+          type: integer
+        code4rena:
+          type: integer
+
+    ScoutStats:
+      type: object
+      required: [totalActive, totalUpcoming, totalPrizePool, byPlatform]
+      properties:
+        totalActive:
+          type: integer
+        totalUpcoming:
+          type: integer
+        totalPrizePool:
+          type: integer
+        byPlatform:
+          $ref: "#/components/schemas/ScoutStatsByPlatform"
+
+    BountyProgram:
+      type: object
+      required: [id, name, maxBountyDisplay, url, platform, assets, tags, active, kycNote]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        maxBounty:
+          type: ["integer", "null"]
+        maxBountyDisplay:
+          type: string
+        url:
+          type: string
+        platform:
+          type: string
+          enum: [immunefi, hackenproof, cantina]
+        assets:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+        kycNote:
+          type: string
+        lastUpdated:
+          type: ["string", "null"]
+
+    BountyProgramsResult:
+      type: object
+      required: [programs, isLive, source]
+      properties:
+        programs:
+          type: array
+          items:
+            $ref: "#/components/schemas/BountyProgram"
+        isLive:
+          type: boolean
+        source:
+          type: string
+
+    BountySummaryByPlatform:
+      type: object
+      required: [immunefi, hackenproof, cantina]
+      properties:
+        immunefi:
+          type: integer
+        hackenproof:
+          type: integer
+        cantina:
+          type: integer
+
+    BountySummary:
+      type: object
+      required: [totalPrograms, totalMaxBounty, byPlatform]
+      properties:
+        totalPrograms:
+          type: integer
+        totalMaxBounty:
+          type: integer
+        byPlatform:
+          $ref: "#/components/schemas/BountySummaryByPlatform"
+
+    GithubRateLimit:
+      type: object
+      required: [limit, remaining, reset, authenticated]
+      properties:
+        limit:
+          type: integer
+        remaining:
+          type: integer
+        reset:
+          type: string
+        authenticated:
+          type: boolean

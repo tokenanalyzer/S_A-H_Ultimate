@@ -1,0 +1,41 @@
+// app.config.js — Dynamic Expo/EAS config for S_A-H ULTIMATE
+// This file replaces app.json. It reads secrets from process.env at build time
+// so keys are NEVER hardcoded. app.json is kept as a static fallback reference.
+
+export default ({ config }) => ({
+  ...config,
+
+  name: "S_A-H ULTIMATE",
+  slug: "sah-ultimate",
+  version: "3.0.0",
+  description:
+    "Web3 Security Audit Dashboard — AI-powered smart contract vulnerability scanner",
+  orientation: "portrait",
+  backgroundColor: "#0a0a0a",
+
+  android: {
+    package: "com.sah.ultimatedashboard",
+    versionCode: 1,
+    adaptiveIcon: {
+      backgroundColor: "#1d4ed8",
+    },
+    permissions: [],
+  },
+
+  // ── Secrets injected at EAS build time ─────────────────────────────────
+  // These are read from:
+  //   • Local:  process.env (your .env file loaded via dotenv / shell export)
+  //   • EAS:    eas secret:create --scope project --name KEY --value VALUE
+  //   • GitHub: repository secrets (Settings → Secrets → Actions)
+  //
+  // They are accessible inside the app via Constants.expoConfig.extra
+  // For the API server, use process.env directly — keys are passed as env vars.
+  extra: {
+    GROQ_API_KEY:        process.env.GROQ_API_KEY        ?? null,
+    SAMBANOVA_API_KEY:   process.env.SAMBANOVA_API_KEY   ?? null,
+    GEMINI_API_KEY:      process.env.GEMINI_API_KEY      ?? null,
+    GITHUB_TOKEN:        process.env.GITHUB_TOKEN        ?? null,
+    SESSION_SECRET:      process.env.SESSION_SECRET      ?? null,
+    buildTool: "capacitor",
+  },
+});
