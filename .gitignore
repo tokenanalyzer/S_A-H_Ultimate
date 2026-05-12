@@ -76,3 +76,5 @@ service-account*.json
 
 # EAS local credentials (auto-generated, has private keys)
 credentials.json
+.env
+.env.local
