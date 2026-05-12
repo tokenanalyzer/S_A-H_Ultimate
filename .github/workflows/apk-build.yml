@@ -1,0 +1,40 @@
+name: Android APK Build
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        default: 'debug'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.1
+      - name: Install & Build
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm --filter ./artifacts/audit-dashboard run build
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Capacitor + APK
+        run: |
+          cd artifacts/audit-dashboard
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap add android
+          npx cap copy android
+          cd android
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: artifacts/audit-dashboard/android/app/build/outputs/apk/debug/app-debug.apk
