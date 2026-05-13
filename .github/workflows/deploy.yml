@@ -1,0 +1,25 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter ./artifacts/audit-dashboard run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/audit-dashboard/dist/public
+      - uses: actions/deploy-pages@v4
